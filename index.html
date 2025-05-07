@@ -147,7 +147,8 @@
 
     // Fetch image files from backend (updated to point to your hosted backend)
     async function listPublicFiles(album) {
-      const url = `https://drivegallerybackend-1.onrender.com/api/files/${album}`;
+      const url = `https://pseudo-storage-server.onrender.com/api/files/${album}`;
+      
       const allFiles = [];
 
       try {
@@ -173,7 +174,8 @@
 
       files.forEach(file => {
         const imgElement = document.createElement("img");
-    const fullImageUrl = `https://drivegallerybackend-1.onrender.com/api/image/${file.id}`;
+    const fullImageUrl = `https://pseudo-storage-server.onrender.com/api/image/${file.id}`;
+        
 
         imgElement.src = file.thumbnail;
         imgElement.alt = file.name;
