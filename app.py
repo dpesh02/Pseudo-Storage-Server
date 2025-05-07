@@ -24,7 +24,8 @@ print(f"[INIT] Defined albums: {list(folder_ids.keys())}")
 @app.route('/')
 def index():
     print("[ROUTE] / (index) accessed")
-    return jsonify({"message": "Drive Gallery API is online."})
+    return jsonify({"message": "Pseudo-Storage-Server is online. Tm:DipeshShah\nMade by Dipesh Shah , 22054266"})
+        
 
 # List images in a Google Drive folder (album)
 @app.route('/api/files/<album>')
