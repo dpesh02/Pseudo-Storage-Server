@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Gallery Using API</title>
+  
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Image file container and background effects -->
+  <ul id="file-list"></ul>
+  <div class="stars" id="starContainer"></div>
+  <div class="bubbles">
+    <div class="bubble" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="bubble" style="left: 18%; animation-delay: 2s;"></div>
+    <div class="bubble" style="left: 25%; animation-delay: 4s;"></div>
+    <div class="bubble" style="left: 34%; animation-delay: 1s;"></div>
+    <div class="bubble" style="left: 40%; animation-delay: 2s;"></div>
+    <div class="bubble" style="left: 50%; animation-delay: 3s;"></div>
+    <div class="bubble" style="left: 60%; animation-delay: 6s;"></div>
+    <div class="bubble" style="left: 68%; animation-delay: 5s;"></div>
+    <div class="bubble" style="left: 75%; animation-delay: 1s;"></div>
+    <div class="bubble" style="left: 90%; animation-delay: 3s;"></div>
+  </div>
+
+  <!-- Title -->
+  <h1>Google Drive Image Gallery</h1>
+
+  <!-- Hover effect for background -->
+  <div class="hover-reveal-bg" id="bgImage"></div>
+  <div class="hover-wrapper" id="hoverArea">
+    <img src="a.jpg" class="hover-hide-image" id="hoverImage" />
+  </div>
+
+  <!-- Navbar with search and album navigation -->
+  <nav class="navbar">
+    <div class="logo" onclick="scrollToTop()">📸 My Gallery</div>
+    <div class="nav-links">
+      <button onclick="scrollToGroup('SamsungA72')">Samsung A72</button>
+      <button onclick="scrollToGroup('Dipesh Gmail')">Dipesh Gmail</button>
+    </div>
+    <div class="nav-search">
+      <input type="text" id="albumSearch" placeholder="Search albums..." />
+      <button onclick="clearSearch()">❌</button>
+    </div>
+  </nav>
+
+  <!-- Search bar -->
+  <input
+    type="text"
+    id="albumSearch"
+    placeholder="Search albums (e.g., Class 12, dip BDY...)"
+    style="margin-top: 20px; padding: 10px 15px; border-radius: 8px; border: none; font-size: 1rem; width: 80%; max-width: 500px; box-shadow: 0 0 10px rgba(0,255,255,0.4); background-color: #1e1e1e; color: #fff;"
+  />
+
+  <!-- Album groups container -->
+  <div class="album-group-container" id="albumGroupContainer"></div>
+
+  <!-- Glass container for file display -->
+  <div class="glass-container">
+    <div id="fileContainer">
+      <div class="loading-animation">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Image counter -->
+  <div class="image-counter" id="imageCounter">Images Loaded: 0</div>
+
+  <script>
+    // Folder IDs for different albums (keep as is)
+    const folderIds = {
+      album1: '1aIagh9HNCb6csvbWsE5k13F04eMpKbyw', //This is public you may view it
+      album2: '1NHd36bGY9JDrdLmf64GtXpWNtx6x3dnP' //This aint no Public Mah Niga So you cant view it
+    };
+
+    // Album groups definitions (keep as is)
+    const albumGroups = {
+      SamsungA72: {
+        label: "Samsung A72",
+        albums: {
+          album1: "Jan 1 : BDY (FOLDER ID PUBLIC)",
+          album2: "DCIM July-Dec (FOLDER ID PRIVATE)"
+        }
+      },
+      GoogleCam: {
+        label: "Google Cam",
+        albums: {
+          album3: "Google Cam (Not defined Folder ID)"
+        }
+      }
+    };
+
+    let currentAlbum = '';
+    let nextPageToken = '';
+    let imagesLoaded = 0;
+    const albumCache = {};
+
+    // Load album content
+    function loadAlbum(album) {
+      currentAlbum = album;
+
+      const glassContainer = document.querySelector(".glass-container");
+      const offset = -80; // adjust based on your navbar height or spacing
+      if (glassContainer) {
+        const top = glassContainer.getBoundingClientRect().top + window.scrollY + offset;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+
+      const fileContainer = document.getElementById("fileContainer");
+
+      if (albumCache[album]) {
+        fileContainer.innerHTML = albumCache[album];
+        fileContainer.style.visibility = 'visible';
+        document.getElementById("imageCounter").textContent = `Images Loaded: ${albumCache[album].match(/<img/g)?.length || 0}`;
+        return;
+      }
+
+      nextPageToken = '';
+      imagesLoaded = 0;
+      fileContainer.innerHTML = '<div class="loading-animation">Loading...</div>';
+      fileContainer.style.visibility = 'visible';
+      document.getElementById("imageCounter").textContent = "Images Loaded: 0";
+      listPublicFiles(album);
+    }
+
+    // Fetch image files from backend (updated to point to your hosted backend)
+    async function listPublicFiles(album) {
+      const url = `https://drivegallerybackend-1.onrender.com/api/files/${album}`;
+      const allFiles = [];
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.length > 0) {
+          allFiles.push(...data);
+        }
+
+        allFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        displayFiles(allFiles);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        document.getElementById("fileContainer").textContent = "Error loading images.";
+      }
+    }
+
+    // Display files in the gallery
+    async function displayFiles(files) {
+      const fileContainer = document.getElementById("fileContainer");
+      fileContainer.innerHTML = "";
+
+      files.forEach(file => {
+        const imgElement = document.createElement("img");
+    const fullImageUrl = `https://drivegallerybackend-1.onrender.com/api/image/${file.id}`;
+
+        imgElement.src = file.thumbnail;
+        imgElement.alt = file.name;
+        imgElement.loading = "lazy";
+        imgElement.onclick = () => openFullImage(fullImageUrl);
+        fileContainer.appendChild(imgElement);
+      });
+
+      albumCache[currentAlbum] = fileContainer.innerHTML;
+      fileContainer.style.visibility = 'visible';
+      document.getElementById("imageCounter").textContent = `Images Loaded: ${files.length}`;
+    }
+
+    // Open full image in modal
+// Open full image in modal
+function openFullImage(url) {
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+
+  console.log("Opening full image:", url); // Debugging line
+  
+  if (modal && modalImg) {
+    modalImg.src = url;
+    modal.style.display = "flex"; // Make the modal visible
+  } else {
+    console.error("Modal elements not found.");
+  }
+}
+    // Render album groups and their albums (keep as is)
+    function renderAlbumGroups() {
+      const container = document.getElementById("albumGroupContainer");
+      container.innerHTML = ""; // Clear if rerendering
+
+      for (const groupKey in albumGroups) {
+        const group = albumGroups[groupKey];
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "album-group";
+
+        const header = document.createElement("div");
+        header.className = "album-group-header";
+        header.innerHTML = `${group.label} <span style="font-size: 1.5rem;">▼</span>`;
+        header.onclick = () => {
+          const timeline = groupDiv.querySelector(".album-timeline");
+          const isVisible = timeline.style.display === "flex";
+          timeline.style.display = isVisible ? "none" : "flex";
+          header.querySelector("span").textContent = isVisible ? "▼" : "▲";
+        };
+
+        const timeline = document.createElement("div");
+        timeline.className = "album-timeline";
+
+        for (const albumId in group.albums) {
+          const entry = document.createElement("div");
+          entry.className = "album-entry";
+          entry.textContent = group.albums[albumId];
+          entry.dataset.albumId = albumId; // for loading
+          entry.dataset.searchText = group.albums[albumId].toLowerCase(); // for filtering
+          entry.onclick = () => loadAlbum(albumId);
+          timeline.appendChild(entry);
+        }
+
+        groupDiv.appendChild(header);
+        groupDiv.appendChild(timeline);
+        container.appendChild(groupDiv);
+      }
+    }
+
+    // Scroll to top of the page (keep as is)
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Scroll to specific album group (keep as is)
+    function scrollToGroup(groupKey) {
+      const group = document.querySelector(`.album-group:nth-of-type(${Object.keys(albumGroups).indexOf(groupKey) + 1})`);
+      if (group) {
+        group.scrollIntoView({ behavior: 'smooth' });
+        const timeline = group.querySelector('.album-timeline');
+        if (timeline.style.display !== "flex") {
+          timeline.style.display = "flex";
+          group.querySelector("span").textContent = "▲";
+        }
+      }
+    }
+
+    // Clear the search input (keep as is)
+    function clearSearch() {
+      const searchInput = document.getElementById("albumSearch");
+      searchInput.value = "";
+      searchInput.dispatchEvent(new Event("input"));
+    }
+
+    // Close the image modal (keep as is)
+    function closeModal() {
+      const modal = document.getElementById("imageModal");
+      modal.style.display = "none";
+      document.getElementById("modalImage").src = ""; // Clear image to stop loading
+    }
+
+    window.onclick = function (event) {
+      const modal = document.getElementById("imageModal");
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+
+    // Generate star effect in background (keep as is)
+    const starContainer = document.getElementById("starContainer");
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement("div");
+      star.className = "star";
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.animationDuration = `${2 + Math.random() * 3}s`;
+      starContainer.appendChild(star);
+    }
+
+    renderAlbumGroups();
+  </script>
+
+  <!-- Image modal to show full images -->
+  <div id="imageModal" class="image-modal" style="display: none;">
+    <span class="close-btn" onclick="closeModal()">×</span>
+    <img class="modal-content" id="modalImage" />
+  </div>
+</body>
+</html>
