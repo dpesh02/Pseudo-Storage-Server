@@ -1,6 +1,6 @@
-# ImageGalleryDrive
+# Pseudo-Storage-Server
 
-**ImageGalleryDrive** is a web application that centralizes images from multiple Google Drive accounts into a single, easy-to-use image gallery. It leverages the Google Drive API to fetch images from user-specified folders and organizes them into albums. The gallery allows users to browse images, search for albums, and display them in an organized and visually appealing way.
+**Pseudo-Storage-Server** is a web application that centralizes images from multiple Google Drive accounts into a single, easy-to-use image gallery. It leverages the Google Drive API to fetch images from user-specified folders and organizes them into albums. The gallery allows users to browse images, search for albums, and display them in an organized and visually appealing way.
 
 ---
 
@@ -40,5 +40,5 @@
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/ImageGalleryDrive.git
-   cd ImageGalleryDrive
+   git clone https://github.com/yourusername/Pseudo-Storage-Server.git
+   cd Pseudo-Storage-Server
